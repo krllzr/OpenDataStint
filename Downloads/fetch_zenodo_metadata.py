@@ -67,7 +67,8 @@ df = fetch_zenodo_data(community_id)
 current_time = datetime.now().strftime('%Y-%m-%dT%H%M%S')
 
 # Define the directory path
-directory = '/Downloads'
+script_dir = os.path.dirname(os.path.abspath(__file__))
+directory = os.path.join(script_dir, 'data')
 
 # Ensure the directory exists
 os.makedirs(directory, exist_ok=True)
