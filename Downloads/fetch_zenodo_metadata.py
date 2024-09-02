@@ -65,7 +65,19 @@ df = fetch_zenodo_data(community_id)
 
 # Save the data as JSON with timestamp
 current_time = datetime.now().strftime('%Y-%m-%dT%H%M%S')
-file_path_backup = f'/Users/kyril/Downloads/{current_time}_zenodo_community_data_0830.json'
-file_path_latest = f'/Users/kyril/Downloads/latest_zenodo_community_data_0830.json'
+
+# Define the directory path
+directory = 'OpenDataStint/Downloads'
+
+# Ensure the directory exists
+os.makedirs(directory, exist_ok=True)
+
+# Define file paths
+file_path_backup = os.path.join(directory, f'{current_time}_zenodo_community_data_0830.json')
+file_path_latest = os.path.join(directory, 'latest_zenodo_community_data_0830.json')
+
+# Save the files
 df.to_json(file_path_backup, orient='records', lines=True)
 df.to_json(file_path_latest, orient='records', lines=True)
+
+print(f"Files saved to {file_path_backup} and {file_path_latest}")
