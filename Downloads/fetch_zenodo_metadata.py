@@ -67,7 +67,7 @@ df = fetch_zenodo_data(community_id)
 current_time = datetime.now().strftime('%Y-%m-%dT%H%M%S')
 
 # Define the directory path
-directory = 'OpenDataStint/Downloads'
+directory = '/Downloads'
 
 # Ensure the directory exists
 os.makedirs(directory, exist_ok=True)
