@@ -73,8 +73,8 @@ directory = 'OpenDataStint/Downloads'
 os.makedirs(directory, exist_ok=True)
 
 # Define file paths
-file_path_backup = os.path.join(directory, f'{current_time}_zenodo_community_data_0830.json')
-file_path_latest = os.path.join(directory, 'latest_zenodo_community_data_0830.json')
+file_path_backup = os.path.join(directory, f'{current_time}_zenodo_community_data_0902.json')
+file_path_latest = os.path.join(directory, 'latest_zenodo_community_data_0902.json')
 
 # Save the files
 df.to_json(file_path_backup, orient='records', lines=True)
