@@ -77,8 +77,18 @@ os.makedirs(directory, exist_ok=True)
 file_path_backup = os.path.join(directory, f'{current_time}_zenodo_community_data_0902.json')
 file_path_latest = os.path.join(directory, 'latest_zenodo_community_data_0902.json')
 
-# Save the files
+# Save the backup file for the current day
 df.to_json(file_path_backup, orient='records', lines=True)
-df.to_json(file_path_latest, orient='records', lines=True)
 
-print(f"Files saved to {file_path_backup} and {file_path_latest}")
+# Check if 'latest_zenodo_community_data_0902.json' exists, load and append the new data
+if os.path.exists(file_path_latest):
+    # Load the existing data from file_path_latest
+    existing_data = pd.read_json(file_path_latest, orient='records', lines=True)
+    
+    # Append the new data to the existing data
+    updated_data = pd.concat([existing_data, df], ignore_index=True)
+else:
+    # If the file does not exist, the new data will be the updated data
+    updated_data = df
+
+updated_data.to_json(file_path_latest, orient='records', lines=True)
