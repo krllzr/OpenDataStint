@@ -35,11 +35,10 @@ def fetch_zenodo_data(community_id):
             
             related_identifiers = record.get('metadata', {}).get('related_identifiers', [])
             if related_identifiers:
-                # Iterate through the list of related_identifiers
                 for item in related_identifiers:
                     if item.get("relation") == "isSupplementTo":
                         github_name = item.get("identifier").split('/')[-1]
-                        break  # Exit the loop when a match is found
+                        break
 
             records_data.append({
                 'Title': title,
@@ -60,35 +59,24 @@ def fetch_zenodo_data(community_id):
     df = pd.DataFrame(records_data)
     return df
 
-# Extract the statistics from the Zenodo API
 df = fetch_zenodo_data(community_id)
 
-# Save the data as JSON with timestamp
 current_time = datetime.now().strftime('%Y-%m-%dT%H%M%S')
 
-# Define the directory path
 script_dir = os.path.dirname(os.path.abspath(__file__))
 directory = os.path.join(script_dir, 'data')
 
-# Ensure the directory exists
 os.makedirs(directory, exist_ok=True)
 
-# Define file paths
 file_path_backup = os.path.join(directory, f'{current_time}_zenodo_community.json')
-file_path_latest = os.path.join(directory, 'latest_zenodo_community_data.json')
+file_path_latest = os.path.join(directory, 'cumulative_zenodo_community_data.json')
 
-# Save the backup file for the current day
 df.to_json(file_path_backup, orient='records', lines=True)
 
-# Check if 'latest_zenodo_community_data.json' exists, load and append the new data
 if os.path.exists(file_path_latest):
-    # Load the existing data from file_path_latest
     existing_data = pd.read_json(file_path_latest, orient='records', lines=True)
-    
-    # Append the new data to the existing data
     updated_data = pd.concat([existing_data, df], ignore_index=True)
 else:
-    # If the file does not exist, the new data will be the updated data
     updated_data = df
 
 updated_data.to_json(file_path_latest, orient='records', lines=True)
