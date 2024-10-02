@@ -69,7 +69,7 @@ directory = os.path.join(script_dir, 'data')
 os.makedirs(directory, exist_ok=True)
 
 file_path_backup = os.path.join(directory, f'{current_time}_zenodo_community.json')
-file_path_latest = os.path.join(directory, 'cumulative_zenodo_community_data.json')
+file_path_latest = os.path.join(directory, 'daily_zenodo_community_data.json')
 
 df.to_json(file_path_backup, orient='records', lines=True)
 
