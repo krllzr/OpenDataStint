@@ -131,7 +131,7 @@ if __name__ == "__main__":
     os.makedirs(directory, exist_ok=True)
 
     file_path_backup = os.path.join(directory, f'{current_datetime}_github_opendata_metadata.json')
-    file_path_latest = os.path.join(directory, 'cumulative_github_opendata_metadata.json')
+    file_path_latest = os.path.join(directory, 'daily_github_opendata_metadata.json')
 
     df.to_json(file_path_backup, orient='records', lines=True)
 
@@ -142,6 +142,3 @@ if __name__ == "__main__":
         updated_data = df
 
     updated_data.to_json(file_path_latest, orient='records', lines=True)
-
-    print(f"Data saved to {file_path_backup}")
-    print(f"Cumulative data updated in {file_path_latest}")
