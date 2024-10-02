@@ -30,7 +30,6 @@ def fetch_zenodo_data(community_id):
             versions = record['metadata']['relations']['version'][0]['index'] + 1
             title = record['metadata']['title']
             
-            # Initialize github_name to 'none' by default
             github_name = 'none'
             
             related_identifiers = record.get('metadata', {}).get('related_identifiers', [])
