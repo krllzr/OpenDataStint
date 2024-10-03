@@ -72,7 +72,7 @@ def get_general_repo_data(repository_full_name, api_url):
             # "description": repo_data.get('description', ''),
             # "language": repo_data.get('language', ''),
             # "created_at": repo_data.get('created_at', ''),
-            # "updated_at": repo_data.get('updated_at', ''),            
+            # "updated_at": repo_data.get('updated_at', ''),
             "size": repo_data.get('size', 0),
             "subscribers_count": repo_data.get('subscribers_count', 0)
         }
@@ -89,9 +89,9 @@ def get_traffic_data(repository_full_name, api_url, token):
     }
     # Initialize traffic data with zeros
     traffic_data = {
-        'views_count': 0,
+        'views': 0,
         'unique_views': 0,
-        'clones_count': 0,
+        'clones': 0,
         'unique_clones': 0
     }
 
@@ -101,19 +101,20 @@ def get_traffic_data(repository_full_name, api_url, token):
 
     if response.status_code == 200:
         views_data = response.json()
-        traffic_data['views_count'] = views_data.get('count', 0)
+        traffic_data['views'] = views_data.get('count', 0)
         traffic_data['unique_views'] = views_data.get('uniques', 0)
     elif response.status_code == 204:
         print(f"No traffic data available for views for {repository_full_name}. Status Code: {response.status_code}")
     else:
         print(f"Error fetching views for {repository_full_name}: {response.status_code} - {response.text}")
 
+    # Fetching repository clones
     clones_url = f"{api_url}/repos/{repository_full_name}/traffic/clones"
     response = requests.get(clones_url, headers=headers)
 
     if response.status_code == 200:
         clones_data = response.json()
-        traffic_data['clones_count'] = clones_data.get('count', 0)
+        traffic_data['clones'] = clones_data.get('count', 0)
         traffic_data['unique_clones'] = clones_data.get('uniques', 0)
     elif response.status_code == 204:
         print(f"No traffic data available for clones for {repository_full_name}. Status Code: {response.status_code}")
@@ -122,97 +123,102 @@ def get_traffic_data(repository_full_name, api_url, token):
 
     return traffic_data
 
-if __name__ == "__main__":
-    all_repo_data = []
+# Main code (removed the if __name__ == "__main__": block)
+all_repo_data = []
 
-    for repo in repositories:
-        repository_full_name = f"{user}/{repo}"
-        repo_metadata = get_general_repo_data(repository_full_name, api_url)
+for repo in repositories:
+    repository_full_name = f"{user}/{repo}"
+    repo_metadata = get_general_repo_data(repository_full_name, api_url)
 
-        if repo_metadata:
-            if GITHUB_TOKEN:
-                traffic = get_traffic_data(repository_full_name, api_url, GITHUB_TOKEN)
-                repo_metadata.update(traffic)
-            else:
-                print("GITHUB_TOKEN is not set. Skipping traffic data.")
+    if repo_metadata:
+        if GITHUB_TOKEN:
+            traffic = get_traffic_data(repository_full_name, api_url, GITHUB_TOKEN)
+            repo_metadata.update(traffic)
+        else:
+            print("GITHUB_TOKEN is not set. Skipping traffic data.")
 
-            all_repo_data.append(repo_metadata)
+        all_repo_data.append(repo_metadata)
 
-    # Convert the list of dictionaries to a DataFrame
-    df = pd.DataFrame(all_repo_data)
+# Convert the list of dictionaries to a DataFrame
+df = pd.DataFrame(all_repo_data)
 
-    # Convert 'Timestemp' column to datetime
-    df['Timestemp'] = pd.to_datetime(df['Timestemp'])
+# Convert 'Timestemp' column to datetime
+df['Timestemp'] = pd.to_datetime(df['Timestemp'])
 
-    # Define the directory path
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    directory = os.path.join(script_dir, 'data_github')
+# Define the directory path
+script_dir = os.path.dirname(os.path.abspath(__file__))
+directory = os.path.join(script_dir, 'data_github')
 
-    # Ensure the directory exists
-    os.makedirs(directory, exist_ok=True)
+# Ensure the directory exists
+os.makedirs(directory, exist_ok=True)
 
-    # Define file paths
-    file_path_backup = os.path.join(directory, f'{current_datetime}_github_opendata_metadata.json')
-    file_path_latest = os.path.join(directory, 'daily_github_opendata_metadata.json')
+# Define file paths
+file_path_backup = os.path.join(directory, f'{current_datetime}_github_opendata_metadata.json')
+file_path_latest = os.path.join(directory, 'daily_github_opendata_metadata.json')
 
-    # Check if the cumulative file exists and handle cumulative data
-    if os.path.exists(file_path_latest):
-        # Load existing data
-        existing_data = pd.read_json(file_path_latest, orient='records', lines=True)
-        existing_data['Timestemp'] = pd.to_datetime(existing_data['Timestemp'])
-    else:
-        existing_data = pd.DataFrame()
+# Check if the cumulative file exists and handle cumulative data
+if os.path.exists(file_path_latest):
+    # Load existing data
+    existing_data = pd.read_json(file_path_latest, orient='records', lines=True)
+    existing_data['Timestemp'] = pd.to_datetime(existing_data['Timestemp'])
+else:
+    existing_data = pd.DataFrame()
 
-    # Compute differences if existing data is available
-    if not existing_data.empty:
-        # Get the last record for each repository
-        last_data = existing_data.sort_values('Timestemp').groupby('repository').tail(1)
-    
-        # Check if traffic columns exist in last_data
-        traffic_columns = ['views_count', 'clones_count', 'unique_views', 'unique_clones']
-        missing_columns = [col for col in traffic_columns if col not in last_data.columns]
-    
-        # If any traffic columns are missing, fill them with zeros
-        if missing_columns:
-            for col in missing_columns:
-                last_data[col] = 0
-    
-        # Similarly, ensure these columns exist in df
-        for col in traffic_columns:
-            if col not in df.columns:
-                df[col] = 0
-    
-        # Merge today's data with last data
-        df_with_diff = df.merge(
-            last_data[['repository'] + traffic_columns],
-            on='repository', how='left', suffixes=('', '_prev')
-        )
-    
-        # Calculate differences
-        for col in traffic_columns:
-            df_with_diff[f'{col}_diff'] = df_with_diff[col] - df_with_diff[f'{col}_prev']
-    
-        # Replace NaN differences with zeros
-        diff_columns = [f'{col}_diff' for col in traffic_columns]
-        df_with_diff[diff_columns] = df_with_diff[diff_columns].fillna(0)
-    
-        # Drop the '_prev' columns
-        prev_columns = [f'{col}_prev' for col in traffic_columns]
-        df_with_diff = df_with_diff.drop(columns=prev_columns)
-    else:
-        # If no existing data, differences are zeros
-        df_with_diff = df.copy()
-        traffic_columns = ['views_count', 'clones_count', 'unique_views', 'unique_clones']
-        for col in traffic_columns:
-            if col not in df_with_diff.columns:
-                df_with_diff[col] = 0
-            df_with_diff[f'{col}_diff'] = 0
+# Define traffic data and difference columns
+traffic_data_columns = ['views', 'unique_views', 'clones', 'unique_clones']
+traffic_diff_columns = ['views_diff', 'unique_views_diff', 'clones_diff', 'unique_clones_diff']
+traffic_columns = ['views', 'views_diff', 'unique_views', 'unique_views_diff', 'clones', 'clones_diff', 'unique_clones', 'unique_clones_diff']
 
-    # Save today's data with differences to backup file
-    df_with_diff.to_json(file_path_backup, orient='records', lines=True)
+# Compute differences if existing data is available
+if not existing_data.empty:
+    # Get the last record for each repository
+    last_data = existing_data.sort_values('Timestemp').groupby('repository').tail(1)
 
-    # Update cumulative data
-    updated_data = pd.concat([existing_data, df_with_diff], ignore_index=True)
+    # Ensure traffic data columns exist in last_data
+    for col in traffic_data_columns:
+        if col not in last_data.columns:
+            last_data[col] = 0
 
-    # Save updated cumulative data
-    updated_data.to_json(file_path_latest, orient='records', lines=True)
+    # Ensure traffic data columns exist in df
+    for col in traffic_data_columns:
+        if col not in df.columns:
+            df[col] = 0
+
+    # Merge today's data with last data
+    df_with_diff = df.merge(
+        last_data[['repository'] + traffic_data_columns],
+        on='repository', how='left', suffixes=('', '_prev')
+    )
+
+    # Calculate differences
+    for col in traffic_data_columns:
+        df_with_diff[f'{col}_diff'] = df_with_diff[col] - df_with_diff[f'{col}_prev']
+
+    # Replace NaN differences with zeros
+    diff_columns = [f'{col}_diff' for col in traffic_data_columns]
+    df_with_diff[diff_columns] = df_with_diff[diff_columns].fillna(0)
+
+    # Drop the '_prev' columns
+    prev_columns = [f'{col}_prev' for col in traffic_data_columns]
+    df_with_diff = df_with_diff.drop(columns=prev_columns)
+else:
+    # If no existing data, differences are zeros
+    df_with_diff = df.copy()
+    for col in traffic_data_columns:
+        if col not in df_with_diff.columns:
+            df_with_diff[col] = 0
+        df_with_diff[f'{col}_diff'] = 0
+
+# Reorder columns
+df_with_diff = df_with_diff[['repository', 'Timestemp',
+                             'stargazers_count', 'watchers_count', 'forks_count', 'open_issues_count',
+                             'size', 'subscribers_count'] + traffic_columns]
+
+# Save today's data with differences to backup file
+df_with_diff.to_json(file_path_backup, orient='records', lines=True)
+
+# Update cumulative data
+updated_data = pd.concat([existing_data, df_with_diff], ignore_index=True)
+
+# Save updated cumulative data
+updated_data.to_json(file_path_latest, orient='records', lines=True)
