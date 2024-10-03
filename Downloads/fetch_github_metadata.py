@@ -167,31 +167,46 @@ if __name__ == "__main__":
     if not existing_data.empty:
         # Get the last record for each repository
         last_data = existing_data.sort_values('Timestemp').groupby('repository').tail(1)
-
+    
+        # Check if traffic columns exist in last_data
+        traffic_columns = ['views_count', 'clones_count', 'unique_views', 'unique_clones']
+        missing_columns = [col for col in traffic_columns if col not in last_data.columns]
+    
+        # If any traffic columns are missing, fill them with zeros
+        if missing_columns:
+            for col in missing_columns:
+                last_data[col] = 0
+    
+        # Similarly, ensure these columns exist in df
+        for col in traffic_columns:
+            if col not in df.columns:
+                df[col] = 0
+    
         # Merge today's data with last data
         df_with_diff = df.merge(
-            last_data[['repository', 'views_count', 'clones_count', 'unique_views', 'unique_clones']],
+            last_data[['repository'] + traffic_columns],
             on='repository', how='left', suffixes=('', '_prev')
         )
-
+    
         # Calculate differences
-        df_with_diff['views_count_diff'] = df_with_diff['views_count'] - df_with_diff['views_count_prev']
-        df_with_diff['clones_count_diff'] = df_with_diff['clones_count'] - df_with_diff['clones_count_prev']
-        df_with_diff['unique_views_diff'] = df_with_diff['unique_views'] - df_with_diff['unique_views_prev']
-        df_with_diff['unique_clones_diff'] = df_with_diff['unique_clones'] - df_with_diff['unique_clones_prev']
-
+        for col in traffic_columns:
+            df_with_diff[f'{col}_diff'] = df_with_diff[col] - df_with_diff[f'{col}_prev']
+    
         # Replace NaN differences with zeros
-        df_with_diff[['views_count_diff', 'clones_count_diff', 'unique_views_diff', 'unique_clones_diff']] = df_with_diff[['views_count_diff', 'clones_count_diff', 'unique_views_diff', 'unique_clones_diff']].fillna(0)
-
+        diff_columns = [f'{col}_diff' for col in traffic_columns]
+        df_with_diff[diff_columns] = df_with_diff[diff_columns].fillna(0)
+    
         # Drop the '_prev' columns
-        df_with_diff = df_with_diff.drop(columns=['views_count_prev', 'clones_count_prev', 'unique_views_prev', 'unique_clones_prev'])
+        prev_columns = [f'{col}_prev' for col in traffic_columns]
+        df_with_diff = df_with_diff.drop(columns=prev_columns)
     else:
         # If no existing data, differences are zeros
         df_with_diff = df.copy()
-        df_with_diff['views_count_diff'] = 0
-        df_with_diff['clones_count_diff'] = 0
-        df_with_diff['unique_views_diff'] = 0
-        df_with_diff['unique_clones_diff'] = 0
+        traffic_columns = ['views_count', 'clones_count', 'unique_views', 'unique_clones']
+        for col in traffic_columns:
+            if col not in df_with_diff.columns:
+                df_with_diff[col] = 0
+            df_with_diff[f'{col}_diff'] = 0
 
     # Save today's data with differences to backup file
     df_with_diff.to_json(file_path_backup, orient='records', lines=True)
