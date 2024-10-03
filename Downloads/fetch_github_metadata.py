@@ -10,7 +10,8 @@ api_url = "https://api.github.com"
 user = "krllzr"
 
 repositories = ["barzooka", "OpenDataStint"]
-# repositories = ["OpenDataStint"]
+
+GITHUB_TOKEN = os.getenv('TOKEN')
 
 # repositories = [
 #     "Abwassersurveillance_AMELAG",
@@ -123,8 +124,6 @@ def get_traffic_data(repository_full_name, api_url, token):
 
 if __name__ == "__main__":
     all_repo_data = []
-
-    GITHUB_TOKEN = os.getenv('TOKEN')
 
     for repo in repositories:
         repository_full_name = f"{user}/{repo}"
