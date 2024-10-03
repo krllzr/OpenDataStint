@@ -2,7 +2,7 @@ name: Fetch Zenodo Data
 
 on:
   schedule:
-    # Runs every day at midnight
+    # Runs every day at 5.00 am
     - cron: '0 5 * * *'
   workflow_dispatch:
 
