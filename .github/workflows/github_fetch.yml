@@ -25,10 +25,14 @@ jobs:
           pip install requests pandas python-dateutil
 
       - name: Run GitHub Fetch Script
+        env:
+          PAT_GITHUB: ${{ secrets.TOKEN }}
         run: |
           python fetch_github_metadata.py
         # Update the working directory if needed
         working-directory: ${{ github.workspace }}/Downloads
+
+        
 
       - name: Commit and push changes
         run: |
