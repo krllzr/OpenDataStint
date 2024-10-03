@@ -48,9 +48,6 @@ repositories = ["barzooka", "OpenDataStint"]
 #     "StopptCOVID-Studie_Daten_Analyse_und_Ergebnisse"
 # ]
 
-# Placeholder for GitHub token
-GITHUB_TOKEN = os.getenv('TOKEN')
-
 # Current timestamp
 current_datetime = datetime.now().strftime('%Y-%m-%dT%H%M%S')
 timestemp = datetime.now().isoformat()
@@ -125,6 +122,8 @@ def get_traffic_data(repository_full_name, api_url, token):
 
 if __name__ == "__main__":
     all_repo_data = []
+
+    GITHUB_TOKEN = os.getenv('TOKEN')
 
     for repo in repositories:
         repository_full_name = f"{user}/{repo}"
