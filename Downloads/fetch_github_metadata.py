@@ -49,7 +49,7 @@ repositories = ["barzooka", "OpenDataStint"]
 # ]
 
 # Placeholder for GitHub token
-GITHUB_TOKEN = os.getenv('GITHUB_TOKEN')
+GITHUB_TOKEN = os.getenv('TOKEN')
 
 # Current timestamp
 current_datetime = datetime.now().strftime('%Y-%m-%dT%H%M%S')
