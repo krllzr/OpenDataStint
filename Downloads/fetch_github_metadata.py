@@ -104,10 +104,11 @@ def get_traffic_data(repository_full_name, api_url, token):
         views_data = response.json()
         traffic_data['views_count'] = views_data.get('count', 0)
         traffic_data['unique_views'] = views_data.get('uniques', 0)
+    elif response.status_code == 204:
+        print(f"No traffic data available for views for {repository_full_name}. Status Code: {response.status_code}")
     else:
-        print(f"Error fetching views for {repository_full_name}: {response.status_code}")
+        print(f"Error fetching views for {repository_full_name}: {response.status_code} - {response.text}")
 
-    # Fetching repository clones
     clones_url = f"{api_url}/repos/{repository_full_name}/traffic/clones"
     response = requests.get(clones_url, headers=headers)
 
@@ -115,12 +116,13 @@ def get_traffic_data(repository_full_name, api_url, token):
         clones_data = response.json()
         traffic_data['clones_count'] = clones_data.get('count', 0)
         traffic_data['unique_clones'] = clones_data.get('uniques', 0)
+    elif response.status_code == 204:
+        print(f"No traffic data available for clones for {repository_full_name}. Status Code: {response.status_code}")
     else:
-        print(f"Error fetching clones for {repository_full_name}: {response.status_code}")
+        print(f"Error fetching clones for {repository_full_name}: {response.status_code} - {response.text}")
 
     return traffic_data
 
-# Main script
 if __name__ == "__main__":
     all_repo_data = []
 
