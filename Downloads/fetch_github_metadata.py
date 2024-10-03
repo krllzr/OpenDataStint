@@ -9,7 +9,8 @@ api_url = "https://api.github.com"
 # user = "robert-koch-institut"
 user = "krllzr"
 
-repositories = ["barzooka", "OpenDataStint"]
+# repositories = ["barzooka", "OpenDataStint"]
+repositories = ["OpenDataStint"]
 
 # repositories = [
 #     "Abwassersurveillance_AMELAG",
