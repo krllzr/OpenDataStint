@@ -147,7 +147,7 @@ df['timestamp'] = pd.to_datetime(df['timestamp'])
 
 # Define the directory path
 script_dir = os.path.dirname(os.path.abspath(__file__))
-directory = os.path.join(script_dir, 'data_github')
+directory = os.path.join(script_dir, 'metadata_github')
 
 # Ensure the directory exists
 os.makedirs(directory, exist_ok=True)
