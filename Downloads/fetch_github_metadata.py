@@ -12,6 +12,7 @@ user = "krllzr"
 repositories = ["barzooka", "OpenDataStint"]
 
 # GITHUB_TOKEN = os.getenv('TOKEN')
+GITHUB_TOKEN = None
 
 # repositories = [
 #     "Abwassersurveillance_AMELAG",
