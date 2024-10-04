@@ -71,10 +71,6 @@ def get_general_repo_data(repository_full_name, api_url):
             "watchers_count": repo_data.get('watchers_count', 0),
             "forks_count": repo_data.get('forks_count', 0),
             "open_issues_count": repo_data.get('open_issues_count', 0),
-            # "description": repo_data.get('description', ''),
-            # "language": repo_data.get('language', ''),
-            # "created_at": repo_data.get('created_at', ''),
-            # "updated_at": repo_data.get('updated_at', ''),
             "size": repo_data.get('size', 0),
             "subscribers_count": repo_data.get('subscribers_count', 0)
         }
@@ -137,7 +133,7 @@ for repo in repositories:
             traffic = get_traffic_data(repository_full_name, api_url, GITHUB_TOKEN)
             repo_metadata.update(traffic)
         else:
-            print("GITHUB_TOKEN is not set. Skipping traffic data.")
+            print("GITHUB_TOKEN is not set or empty. Skipping traffic data.")
             # Initialize traffic data with NaN
             traffic = {
                 'views': np.nan,
@@ -151,6 +147,12 @@ for repo in repositories:
 
 # Convert the list of dictionaries to a DataFrame
 df = pd.DataFrame(all_repo_data)
+
+# Ensure traffic data columns are included in the DataFrame
+traffic_data_columns = ['views', 'unique_views', 'clones', 'unique_clones']
+for col in traffic_data_columns:
+    if col not in df.columns:
+        df[col] = np.nan
 
 # Convert 'timestamp' column to datetime
 df['timestamp'] = pd.to_datetime(df['timestamp'])
@@ -174,15 +176,12 @@ if os.path.exists(file_path_latest):
 else:
     existing_data = pd.DataFrame()
 
-# Define traffic data and difference columns
-traffic_data_columns = ['views', 'unique_views', 'clones', 'unique_clones']
+# Define traffic difference columns
 traffic_diff_columns = ['views_diff', 'unique_views_diff', 'clones_diff', 'unique_clones_diff']
-traffic_columns = ['views', 'views_diff', 'unique_views', 'unique_views_diff', 'clones', 'clones_diff', 'unique_clones', 'unique_clones_diff']
+traffic_columns = traffic_data_columns + traffic_diff_columns
 
-# Ensure traffic data columns exist in df and existing_data, fill with NaN if missing
+# Ensure traffic data columns exist in existing_data
 for col in traffic_data_columns:
-    if col not in df.columns:
-        df[col] = np.nan
     if col not in existing_data.columns:
         existing_data[col] = np.nan
 
@@ -215,6 +214,11 @@ else:
     for col in traffic_data_columns:
         df_with_diff[f'{col}_diff'] = np.nan
 
+# Ensure all traffic columns are included in df_with_diff
+for col in traffic_columns:
+    if col not in df_with_diff.columns:
+        df_with_diff[col] = np.nan
+
 # Reorder columns
 df_with_diff = df_with_diff[['repository', 'timestamp',
                              'stargazers_count', 'watchers_count', 'forks_count', 'open_issues_count',
@@ -227,4 +231,4 @@ df_with_diff.to_json(file_path_backup, orient='records', lines=True, date_format
 updated_data = pd.concat([existing_data, df_with_diff], ignore_index=True)
 
 # Save updated cumulative data
-updated_data.to_json(file_path_latest, orient='records', lines=True)
+updated_data.to_json(file_path_latest, orient='records', lines=True, date_format='iso')
