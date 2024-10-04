@@ -85,12 +85,12 @@ def get_traffic_data(repository_full_name, api_url, token):
         'Authorization': f'token {token}',
         'Accept': 'application/vnd.github.v3+json'
     }
-    # Initialize traffic data with NaN
+    # Initialize traffic data with None
     traffic_data = {
-        'views': np.nan,
-        'unique_views': np.nan,
-        'clones': np.nan,
-        'unique_clones': np.nan
+        'views': None,
+        'unique_views': None,
+        'clones': None,
+        'unique_clones': None
     }
 
     # Fetching repository views
@@ -99,8 +99,8 @@ def get_traffic_data(repository_full_name, api_url, token):
 
     if response.status_code == 200:
         views_data = response.json()
-        traffic_data['views'] = views_data.get('count', np.nan)
-        traffic_data['unique_views'] = views_data.get('uniques', np.nan)
+        traffic_data['views'] = views_data.get('count', None)
+        traffic_data['unique_views'] = views_data.get('uniques', None)
     elif response.status_code == 204:
         print(f"No traffic data available for views for {repository_full_name}. Status Code: {response.status_code}")
     else:
@@ -112,8 +112,8 @@ def get_traffic_data(repository_full_name, api_url, token):
 
     if response.status_code == 200:
         clones_data = response.json()
-        traffic_data['clones'] = clones_data.get('count', np.nan)
-        traffic_data['unique_clones'] = clones_data.get('uniques', np.nan)
+        traffic_data['clones'] = clones_data.get('count', None)
+        traffic_data['unique_clones'] = clones_data.get('uniques', None)
     elif response.status_code == 204:
         print(f"No traffic data available for clones for {repository_full_name}. Status Code: {response.status_code}")
     else:
@@ -134,12 +134,12 @@ for repo in repositories:
             repo_metadata.update(traffic)
         else:
             print("GITHUB_TOKEN is not set or empty. Skipping traffic data.")
-            # Initialize traffic data with NaN
+            # Initialize traffic data with None
             traffic = {
-                'views': np.nan,
-                'unique_views': np.nan,
-                'clones': np.nan,
-                'unique_clones': np.nan
+                'views': None,
+                'unique_views': None,
+                'clones': None,
+                'unique_clones': None
             }
             repo_metadata.update(traffic)
 
@@ -152,7 +152,7 @@ df = pd.DataFrame(all_repo_data)
 traffic_data_columns = ['views', 'unique_views', 'clones', 'unique_clones']
 for col in traffic_data_columns:
     if col not in df.columns:
-        df[col] = np.nan
+        df[col] = None
 
 # Convert 'timestamp' column to datetime
 df['timestamp'] = pd.to_datetime(df['timestamp'])
@@ -183,7 +183,7 @@ traffic_columns = traffic_data_columns + traffic_diff_columns
 # Ensure traffic data columns exist in existing_data
 for col in traffic_data_columns:
     if col not in existing_data.columns:
-        existing_data[col] = np.nan
+        existing_data[col] = None
 
 # Compute differences if existing data is available
 if not existing_data.empty:
@@ -193,7 +193,7 @@ if not existing_data.empty:
     # Ensure traffic data columns exist in last_data
     for col in traffic_data_columns:
         if col not in last_data.columns:
-            last_data[col] = np.nan
+            last_data[col] = None
 
     # Merge today's data with last data
     df_with_diff = df.merge(
@@ -209,15 +209,15 @@ if not existing_data.empty:
     prev_columns = [f'{col}_prev' for col in traffic_data_columns]
     df_with_diff = df_with_diff.drop(columns=prev_columns)
 else:
-    # If no existing data, differences are NaN
+    # If no existing data, differences are None
     df_with_diff = df.copy()
     for col in traffic_data_columns:
-        df_with_diff[f'{col}_diff'] = np.nan
+        df_with_diff[f'{col}_diff'] = None
 
 # Ensure all traffic columns are included in df_with_diff
 for col in traffic_columns:
     if col not in df_with_diff.columns:
-        df_with_diff[col] = np.nan
+        df_with_diff[col] = None
 
 # Reorder columns
 df_with_diff = df_with_diff[['repository', 'timestamp',
@@ -229,6 +229,11 @@ df_with_diff.to_json(file_path_backup, orient='records', lines=True, date_format
 
 # Update cumulative data
 updated_data = pd.concat([existing_data, df_with_diff], ignore_index=True)
+
+# Ensure all traffic columns are included in updated_data
+for col in traffic_columns:
+    if col not in updated_data.columns:
+        updated_data[col] = None
 
 # Save updated cumulative data
 updated_data.to_json(file_path_latest, orient='records', lines=True, date_format='iso')
