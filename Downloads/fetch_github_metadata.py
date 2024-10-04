@@ -87,12 +87,12 @@ def get_traffic_data(repository_full_name, api_url, token):
         'Authorization': f'token {token}',
         'Accept': 'application/vnd.github.v3+json'
     }
-    # Initialize traffic data with zeros
+    # Initialize traffic data with NaN
     traffic_data = {
-        'views': 0,
-        'unique_views': 0,
-        'clones': 0,
-        'unique_clones': 0
+        'views': np.nan,
+        'unique_views': np.nan,
+        'clones': np.nan,
+        'unique_clones': np.nan
     }
 
     # Fetching repository views
@@ -101,8 +101,8 @@ def get_traffic_data(repository_full_name, api_url, token):
 
     if response.status_code == 200:
         views_data = response.json()
-        traffic_data['views'] = views_data.get('count', 0)
-        traffic_data['unique_views'] = views_data.get('uniques', 0)
+        traffic_data['views'] = views_data.get('count', np.nan)
+        traffic_data['unique_views'] = views_data.get('uniques', np.nan)
     elif response.status_code == 204:
         print(f"No traffic data available for views for {repository_full_name}. Status Code: {response.status_code}")
     else:
@@ -114,8 +114,8 @@ def get_traffic_data(repository_full_name, api_url, token):
 
     if response.status_code == 200:
         clones_data = response.json()
-        traffic_data['clones'] = clones_data.get('count', 0)
-        traffic_data['unique_clones'] = clones_data.get('uniques', 0)
+        traffic_data['clones'] = clones_data.get('count', np.nan)
+        traffic_data['unique_clones'] = clones_data.get('uniques', np.nan)
     elif response.status_code == 204:
         print(f"No traffic data available for clones for {repository_full_name}. Status Code: {response.status_code}")
     else:
@@ -123,7 +123,7 @@ def get_traffic_data(repository_full_name, api_url, token):
 
     return traffic_data
 
-# Main code (removed the if __name__ == "__main__": block)
+# Main code
 all_repo_data = []
 
 for repo in repositories:
@@ -136,6 +136,14 @@ for repo in repositories:
             repo_metadata.update(traffic)
         else:
             print("GITHUB_TOKEN is not set. Skipping traffic data.")
+            # Initialize traffic data with NaN
+            traffic = {
+                'views': np.nan,
+                'unique_views': np.nan,
+                'clones': np.nan,
+                'unique_clones': np.nan
+            }
+            repo_metadata.update(traffic)
 
         all_repo_data.append(repo_metadata)
 
@@ -169,6 +177,13 @@ traffic_data_columns = ['views', 'unique_views', 'clones', 'unique_clones']
 traffic_diff_columns = ['views_diff', 'unique_views_diff', 'clones_diff', 'unique_clones_diff']
 traffic_columns = ['views', 'views_diff', 'unique_views', 'unique_views_diff', 'clones', 'clones_diff', 'unique_clones', 'unique_clones_diff']
 
+# Ensure traffic data columns exist in df and existing_data, fill with NaN if missing
+for col in traffic_data_columns:
+    if col not in df.columns:
+        df[col] = np.nan
+    if col not in existing_data.columns:
+        existing_data[col] = np.nan
+
 # Compute differences if existing data is available
 if not existing_data.empty:
     # Get the last record for each repository
@@ -177,12 +192,7 @@ if not existing_data.empty:
     # Ensure traffic data columns exist in last_data
     for col in traffic_data_columns:
         if col not in last_data.columns:
-            last_data[col] = 0
-
-    # Ensure traffic data columns exist in df
-    for col in traffic_data_columns:
-        if col not in df.columns:
-            df[col] = 0
+            last_data[col] = np.nan
 
     # Merge today's data with last data
     df_with_diff = df.merge(
@@ -194,20 +204,14 @@ if not existing_data.empty:
     for col in traffic_data_columns:
         df_with_diff[f'{col}_diff'] = df_with_diff[col] - df_with_diff[f'{col}_prev']
 
-    # Replace NaN differences with zeros
-    diff_columns = [f'{col}_diff' for col in traffic_data_columns]
-    df_with_diff[diff_columns] = df_with_diff[diff_columns].fillna(0)
-
     # Drop the '_prev' columns
     prev_columns = [f'{col}_prev' for col in traffic_data_columns]
     df_with_diff = df_with_diff.drop(columns=prev_columns)
 else:
-    # If no existing data, differences are zeros
+    # If no existing data, differences are NaN
     df_with_diff = df.copy()
     for col in traffic_data_columns:
-        if col not in df_with_diff.columns:
-            df_with_diff[col] = 0
-        df_with_diff[f'{col}_diff'] = 0
+        df_with_diff[f'{col}_diff'] = np.nan
 
 # Reorder columns
 df_with_diff = df_with_diff[['repository', 'timestamp',
