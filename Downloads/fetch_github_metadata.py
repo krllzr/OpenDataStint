@@ -219,10 +219,17 @@ for col in traffic_columns:
     if col not in df_with_diff.columns:
         df_with_diff[col] = None
 
-# Reorder columns
-df_with_diff = df_with_diff[['repository', 'timestamp',
-                             'stargazers_count', 'watchers_count', 'forks_count', 'open_issues_count',
-                             'size', 'subscribers_count'] + traffic_columns]
+# Define the desired column order
+desired_columns_order = [
+    'repository', 'timestamp',
+    'stargazers_count', 'watchers_count', 'forks_count', 'open_issues_count',
+    'size', 'subscribers_count',
+    'views', 'views_diff', 'unique_views', 'unique_views_diff',
+    'clones', 'clones_diff', 'unique_clones', 'unique_clones_diff'
+]
+
+# Reorder columns in df_with_diff
+df_with_diff = df_with_diff[desired_columns_order]
 
 # Save today's data with differences to backup file
 df_with_diff.to_json(file_path_backup, orient='records', lines=True, date_format='iso')
@@ -230,10 +237,13 @@ df_with_diff.to_json(file_path_backup, orient='records', lines=True, date_format
 # Update cumulative data
 updated_data = pd.concat([existing_data, df_with_diff], ignore_index=True)
 
-# Ensure all traffic columns are included in updated_data
-for col in traffic_columns:
+# Ensure all columns are included in updated_data
+for col in desired_columns_order:
     if col not in updated_data.columns:
         updated_data[col] = None
+
+# Reorder columns in updated_data
+updated_data = updated_data[desired_columns_order]
 
 # Save updated cumulative data
 updated_data.to_json(file_path_latest, orient='records', lines=True, date_format='iso')
