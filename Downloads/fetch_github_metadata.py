@@ -52,7 +52,7 @@ GITHUB_TOKEN = os.getenv('TOKEN')
 
 # Current timestamp
 current_datetime = datetime.now().strftime('%Y-%m-%dT%H%M%S')
-timestemp = datetime.now().isoformat()
+timestamp = datetime.now().isoformat()
 
 # Function to get general repository metadata
 def get_general_repo_data(repository_full_name, api_url):
@@ -64,7 +64,7 @@ def get_general_repo_data(repository_full_name, api_url):
         repo_data = response.json()
         metadata = {
             "repository": repository_full_name,
-            "Timestemp": timestemp,
+            "timestamp": timestamp,
             "stargazers_count": repo_data.get('stargazers_count', 0),
             "watchers_count": repo_data.get('watchers_count', 0),
             "forks_count": repo_data.get('forks_count', 0),
@@ -142,8 +142,8 @@ for repo in repositories:
 # Convert the list of dictionaries to a DataFrame
 df = pd.DataFrame(all_repo_data)
 
-# Convert 'Timestemp' column to datetime
-df['Timestemp'] = pd.to_datetime(df['Timestemp'])
+# Convert 'timestamp' column to datetime
+df['timestamp'] = pd.to_datetime(df['timestamp'])
 
 # Define the directory path
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -160,7 +160,7 @@ file_path_latest = os.path.join(directory, 'daily_github_opendata_metadata.json'
 if os.path.exists(file_path_latest):
     # Load existing data
     existing_data = pd.read_json(file_path_latest, orient='records', lines=True)
-    existing_data['Timestemp'] = pd.to_datetime(existing_data['Timestemp'])
+    existing_data['timestamp'] = pd.to_datetime(existing_data['timestamp'])
 else:
     existing_data = pd.DataFrame()
 
@@ -172,7 +172,7 @@ traffic_columns = ['views', 'views_diff', 'unique_views', 'unique_views_diff', '
 # Compute differences if existing data is available
 if not existing_data.empty:
     # Get the last record for each repository
-    last_data = existing_data.sort_values('Timestemp').groupby('repository').tail(1)
+    last_data = existing_data.sort_values('timestamp').groupby('repository').tail(1)
 
     # Ensure traffic data columns exist in last_data
     for col in traffic_data_columns:
@@ -210,12 +210,12 @@ else:
         df_with_diff[f'{col}_diff'] = 0
 
 # Reorder columns
-df_with_diff = df_with_diff[['repository', 'Timestemp',
+df_with_diff = df_with_diff[['repository', 'timestamp',
                              'stargazers_count', 'watchers_count', 'forks_count', 'open_issues_count',
                              'size', 'subscribers_count'] + traffic_columns]
 
 # Save today's data with differences to backup file
-df_with_diff.to_json(file_path_backup, orient='records', lines=True)
+df_with_diff.to_json(file_path_backup, orient='records', lines=True, date_format='iso')
 
 # Update cumulative data
 updated_data = pd.concat([existing_data, df_with_diff], ignore_index=True)
