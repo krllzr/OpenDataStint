@@ -7,50 +7,49 @@ import numpy as np
 
 api_url = "https://api.github.com"
 
-# user = "robert-koch-institut"
-user = "krllzr"
+user = "robert-koch-institut"
+# user = "krllzr"
 
-repositories = ["barzooka", "OpenDataStint"]
+# repositories = ["barzooka", "OpenDataStint"]
 
-GITHUB_TOKEN = os.getenv('TOKEN')
-# GITHUB_TOKEN = None
+GITHUB_TOKEN = os.getenv('TOKEN', None)
 
-# repositories = [
-#     "Abwassersurveillance_AMELAG",
-#     "AKTIN_Daten_zur_Aufenthaltsdauer_in_Notaufnahmen",
-#     "Appendix_Potential_COVID-19_test_fraud_detection",
-#     "ARE-Konsultationsinzidenz",
-#     "Bundesweiter_klinischer_Krebsregisterdatensatz-Datenschema_und_Klassifikationen",
-#     "BURDEN_2020_-_Krankheitslast_in_Deutschland_und_seinen_Regionen",
-#     "Carotid_intima-media_thickness-Reference_percentiles_from_the_KiGGS_study",
-#     "Corona-Datenspende_Teildatensatz_Vitaldaten",
-#     "Corona-Datenspende_Teildatensatz_Erleben_und_Verhalten_in_der_Pandemie",
-#     "COVID-19-Hospitalisierungen_in_Deutschland",
-#     "COVID-19-Impfungen_in_Deutschland",
-#     "COVID-19-Todesfaelle_in_Deutschland",
-#     "COVID-19_7-Tage-Inzidenz_in_Deutschland",
-#     "COVID-ARE-Konsultationsinzidenz",
-#     "COVID-SARI-Hospitalisierungsinzidenz",
-#     "Daten_der_Notaufnahmesurveillance",
-#     "epylabel",
-#     "ESI-CorA_SARS-CoV-2-Abwassersurveillance",
-#     "German_Index_of_Socioeconomic_Deprivation_GISD",
-#     "Gesundheit_in_Deutschland_Aktuell",
-#     "GrippeWeb_Daten_des_Wochenberichts",
-#     "Hochfrequente_Mental_Health_Surveillance",
-#     "Inanspruchnahme_von_Routineimpfungen_in_Deutschland-Ergebnisse_aus_der_KV-Impfsurveillance",
-#     "Influenzafaelle_in_Deutschland",
-#     "Intensivkapazitaeten_und_COVID-19-Intensivbettenbelegung_in_Deutschland",
-#     "Observatorium_serologischer_Studien_zu_SARS-CoV-2_in_Deutschland",
-#     "Polioviren_im_Abwasser-PIA",
-#     "Respiratorische_Synzytialvirusfaelle_in_Deutschland",
-#     "SARI-Hospitalisierungsinzidenz",
-#     "SARS-CoV-2-Infektionen_in_Deutschland",
-#     "SARS-CoV-2-Nowcasting_und_-R-Schaetzung",
-#     "SARS-CoV-2-PCR-Testungen_in_Deutschland",
-#     "SARS-CoV-2-Sequenzdaten_aus_Deutschland",
-#     "StopptCOVID-Studie_Daten_Analyse_und_Ergebnisse"
-# ]
+repositories = [
+    "Abwassersurveillance_AMELAG",
+    "AKTIN_Daten_zur_Aufenthaltsdauer_in_Notaufnahmen",
+    "Appendix_Potential_COVID-19_test_fraud_detection",
+    "ARE-Konsultationsinzidenz",
+    "Bundesweiter_klinischer_Krebsregisterdatensatz-Datenschema_und_Klassifikationen",
+    "BURDEN_2020_-_Krankheitslast_in_Deutschland_und_seinen_Regionen",
+    "Carotid_intima-media_thickness-Reference_percentiles_from_the_KiGGS_study",
+    "Corona-Datenspende_Teildatensatz_Vitaldaten",
+    "Corona-Datenspende_Teildatensatz_Erleben_und_Verhalten_in_der_Pandemie",
+    "COVID-19-Hospitalisierungen_in_Deutschland",
+    "COVID-19-Impfungen_in_Deutschland",
+    "COVID-19-Todesfaelle_in_Deutschland",
+    "COVID-19_7-Tage-Inzidenz_in_Deutschland",
+    "COVID-ARE-Konsultationsinzidenz",
+    "COVID-SARI-Hospitalisierungsinzidenz",
+    "Daten_der_Notaufnahmesurveillance",
+    "epylabel",
+    "ESI-CorA_SARS-CoV-2-Abwassersurveillance",
+    "German_Index_of_Socioeconomic_Deprivation_GISD",
+    "Gesundheit_in_Deutschland_Aktuell",
+    "GrippeWeb_Daten_des_Wochenberichts",
+    "Hochfrequente_Mental_Health_Surveillance",
+    "Inanspruchnahme_von_Routineimpfungen_in_Deutschland-Ergebnisse_aus_der_KV-Impfsurveillance",
+    "Influenzafaelle_in_Deutschland",
+    "Intensivkapazitaeten_und_COVID-19-Intensivbettenbelegung_in_Deutschland",
+    "Observatorium_serologischer_Studien_zu_SARS-CoV-2_in_Deutschland",
+    "Polioviren_im_Abwasser-PIA",
+    "Respiratorische_Synzytialvirusfaelle_in_Deutschland",
+    "SARI-Hospitalisierungsinzidenz",
+    "SARS-CoV-2-Infektionen_in_Deutschland",
+    "SARS-CoV-2-Nowcasting_und_-R-Schaetzung",
+    "SARS-CoV-2-PCR-Testungen_in_Deutschland",
+    "SARS-CoV-2-Sequenzdaten_aus_Deutschland",
+    "StopptCOVID-Studie_Daten_Analyse_und_Ergebnisse"
+]
 
 # Current timestamp
 current_datetime = datetime.now().strftime('%Y-%m-%dT%H%M%S')
