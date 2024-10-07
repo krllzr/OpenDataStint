@@ -24,7 +24,7 @@ A cumulative file daily_github_opendata_metadata.json is updated with the latest
 ### Zenodo Metadata Fetching
 Script: fetch_zenodo_metadata.py
 
-Purpose: Fetches metadata for datasets in a specified Zenodo community.
+Purpose: Fetches metadata for datasets in the specified Zenodo community (currently 40 datasets).
 
 Data Fetched:
 
