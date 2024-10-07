@@ -28,14 +28,14 @@ jobs:
     - name: Run Zenodo Fetch Script
       run: |
         python fetch_zenodo_metadata.py
-      working-directory: ${{ github.workspace }}/Downloads
+      working-directory: ${{ github.workspace }}/OpenData_metadata
 
     - name: Run GitHub Fetch Script
       env:
         TOKEN: ${{ secrets.TOKEN }}
       run: |
         python fetch_github_metadata.py
-      working-directory: ${{ github.workspace }}/Downloads
+      working-directory: ${{ github.workspace }}/OpenData_metadata
 
     - name: Commit and push changes
       run: |
