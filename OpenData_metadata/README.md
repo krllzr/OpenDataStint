@@ -1,4 +1,4 @@
-## Open Data Repository Metadata Fetching and Management
+## OpenData Metadata Fetching and Management
 
 This repository is designed to automate the process of fetching and processing RKI's OpenData metadata from GitHub repositories and Zenodo datasets. The scripts run regularly (via GitHub Actions) and store the data as JSON files for further analysis.
 
