@@ -8,10 +8,8 @@ import numpy as np
 api_url = "https://api.github.com"
 
 user = "robert-koch-institut"
-# user = "krllzr"
 
-# repositories = ["barzooka", "OpenDataStint"]
-
+# Get the access token from 'metadata_fetch.yml' or set it to 'None' if it fails
 GITHUB_TOKEN = os.getenv('TOKEN', None)
 
 repositories = [
@@ -51,11 +49,10 @@ repositories = [
     "StopptCOVID-Studie_Daten_Analyse_und_Ergebnisse"
 ]
 
-# Current timestamp
 current_datetime = datetime.now().strftime('%Y-%m-%dT%H%M%S')
 timestamp = datetime.now().isoformat()
 
-# Function to get general repository metadata
+# Get nontraffic repository metadata
 def get_general_repo_data(repository_full_name, api_url):
     repo_url = f"{api_url}/repos/{repository_full_name}"
 
@@ -78,13 +75,13 @@ def get_general_repo_data(repository_full_name, api_url):
         print(f"Error fetching data for {repository_full_name}: {response.status_code}")
         return None
 
-# Function to get repository traffic data
+# Get traffic repository metadata
 def get_traffic_data(repository_full_name, api_url, token):
     headers = {
         'Authorization': f'token {token}',
         'Accept': 'application/vnd.github.v3+json'
     }
-    # Initialize traffic data with None
+
     traffic_data = {
         'views': None,
         'unique_views': None,
@@ -92,7 +89,6 @@ def get_traffic_data(repository_full_name, api_url, token):
         'unique_clones': None
     }
 
-    # Fetching repository views
     views_url = f"{api_url}/repos/{repository_full_name}/traffic/views"
     response = requests.get(views_url, headers=headers)
 
@@ -105,7 +101,6 @@ def get_traffic_data(repository_full_name, api_url, token):
     else:
         print(f"Error fetching views for {repository_full_name}: {response.status_code} - {response.text}")
 
-    # Fetching repository clones
     clones_url = f"{api_url}/repos/{repository_full_name}/traffic/clones"
     response = requests.get(clones_url, headers=headers)
 
@@ -120,7 +115,6 @@ def get_traffic_data(repository_full_name, api_url, token):
 
     return traffic_data
 
-# Main code
 all_repo_data = []
 
 for repo in repositories:
@@ -133,7 +127,7 @@ for repo in repositories:
             repo_metadata.update(traffic)
         else:
             print("GITHUB_TOKEN is not set or empty. Skipping traffic data.")
-            # Initialize traffic data with None
+
             traffic = {
                 'views': None,
                 'unique_views': None,
@@ -144,81 +138,62 @@ for repo in repositories:
 
         all_repo_data.append(repo_metadata)
 
-# Convert the list of dictionaries to a DataFrame
 df = pd.DataFrame(all_repo_data)
 
-# Ensure traffic data columns are included in the DataFrame
 traffic_data_columns = ['views', 'unique_views', 'clones', 'unique_clones']
 for col in traffic_data_columns:
     if col not in df.columns:
         df[col] = None
 
-# Convert 'timestamp' column to datetime
 df['timestamp'] = pd.to_datetime(df['timestamp'])
 
-# Define the directory path
 script_dir = os.path.dirname(os.path.abspath(__file__))
 directory = os.path.join(script_dir, 'metadata_github')
 
-# Ensure the directory exists
 os.makedirs(directory, exist_ok=True)
 
-# Define file paths
 file_path_backup = os.path.join(directory, f'{current_datetime}_github_opendata_metadata.json')
 file_path_latest = os.path.join(directory, 'daily_github_opendata_metadata.json')
 
-# Check if the cumulative file exists and handle cumulative data
 if os.path.exists(file_path_latest):
-    # Load existing data
     existing_data = pd.read_json(file_path_latest, orient='records', lines=True)
     existing_data['timestamp'] = pd.to_datetime(existing_data['timestamp'])
 else:
     existing_data = pd.DataFrame()
 
-# Define traffic difference columns
 traffic_diff_columns = ['views_diff', 'unique_views_diff', 'clones_diff', 'unique_clones_diff']
 traffic_columns = traffic_data_columns + traffic_diff_columns
 
-# Ensure traffic data columns exist in existing_data
 for col in traffic_data_columns:
     if col not in existing_data.columns:
         existing_data[col] = None
 
-# Compute differences if existing data is available
 if not existing_data.empty:
-    # Get the last record for each repository
     last_data = existing_data.sort_values('timestamp').groupby('repository').tail(1)
 
-    # Ensure traffic data columns exist in last_data
     for col in traffic_data_columns:
         if col not in last_data.columns:
             last_data[col] = None
 
-    # Merge today's data with last data
     df_with_diff = df.merge(
         last_data[['repository'] + traffic_data_columns],
         on='repository', how='left', suffixes=('', '_prev')
     )
 
-    # Calculate differences
     for col in traffic_data_columns:
         df_with_diff[f'{col}_diff'] = df_with_diff[col] - df_with_diff[f'{col}_prev']
 
-    # Drop the '_prev' columns
     prev_columns = [f'{col}_prev' for col in traffic_data_columns]
     df_with_diff = df_with_diff.drop(columns=prev_columns)
 else:
-    # If no existing data, differences are None
     df_with_diff = df.copy()
     for col in traffic_data_columns:
         df_with_diff[f'{col}_diff'] = None
 
-# Ensure all traffic columns are included in df_with_diff
 for col in traffic_columns:
     if col not in df_with_diff.columns:
         df_with_diff[col] = None
 
-# Define the desired column order
 desired_columns_order = [
     'repository', 'timestamp',
     'stargazers_count', 'watchers_count', 'forks_count', 'open_issues_count',
@@ -227,22 +202,16 @@ desired_columns_order = [
     'clones', 'clones_diff', 'unique_clones', 'unique_clones_diff'
 ]
 
-# Reorder columns in df_with_diff
 df_with_diff = df_with_diff[desired_columns_order]
 
-# Save today's data with differences to backup file
 df_with_diff.to_json(file_path_backup, orient='records', lines=True, date_format='iso')
 
-# Update cumulative data
 updated_data = pd.concat([existing_data, df_with_diff], ignore_index=True)
 
-# Ensure all columns are included in updated_data
 for col in desired_columns_order:
     if col not in updated_data.columns:
         updated_data[col] = None
 
-# Reorder columns in updated_data
 updated_data = updated_data[desired_columns_order]
 
-# Save updated cumulative data
 updated_data.to_json(file_path_latest, orient='records', lines=True, date_format='iso')
