@@ -63,7 +63,7 @@ df = fetch_zenodo_data(community_id)
 current_time = datetime.now().strftime('%Y-%m-%dT%H%M%S')
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
-directory = os.path.join(script_dir, 'data')
+directory = os.path.join(script_dir, 'metadata_zenodo')
 
 os.makedirs(directory, exist_ok=True)
 
